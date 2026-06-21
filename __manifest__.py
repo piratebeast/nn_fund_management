@@ -8,7 +8,7 @@
     'depends': ['base', 'project', 'mail'],
     'data': [
         'security/security_groups.xml',
-        #'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         'data/nn_fund_sequence.xml',
         'views/approval_decision_wizard_view.xml',
         'views/fund_account_views.xml',

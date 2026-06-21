@@ -4,13 +4,13 @@
     <record id="action_nn_fund_account" model="ir.actions.act_window">
         <field name="name">Fund Accounts</field>
         <field name="res_model">nn.fund.account</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <record id="action_nn_fund_transaction" model="ir.actions.act_window">
         <field name="name">Incoming Funds</field>
         <field name="res_model">nn.fund.account.transaction</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <!-- Menu Hierarchies -->

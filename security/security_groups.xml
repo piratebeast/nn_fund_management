@@ -1,45 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
-        <!-- Main Module Category -->
         <record id="module_category_nn_fund_management" model="ir.module.category">
             <field name="name">Fund Management</field>
             <field name="description">Helps track internal asset distribution and prevent double spending.</field>
             <field name="sequence">10</field>
         </record>
 
-        <!-- Base Fund User Group -->
+        <record id="privilege_nn_fund_management" model="res.groups.privilege">
+            <field name="name">Fund Management Access Levels</field>
+            <field name="category_id" ref="module_category_nn_fund_management"/>
+        </record>
+
         <record id="group_fund_user" model="res.groups">
             <field name="name">Fund User</field>
-            <field name="category_id" ref="module_category_nn_fund_management"/>
+            <field name="privilege_id" ref="privilege_nn_fund_management"/>
             <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
         </record>
 
-        <!-- Finance User Group -->
         <record id="group_finance_user" model="res.groups">
             <field name="name">Finance User</field>
-            <field name="category_id" ref="module_category_nn_fund_management"/>
+            <field name="privilege_id" ref="privilege_nn_fund_management"/>
             <field name="implied_ids" eval="[(4, ref('group_fund_user'))]"/>
         </record>
 
-        <!-- GM Approver Group -->
         <record id="group_gm_approver" model="res.groups">
             <field name="name">GM Approver</field>
-            <field name="category_id" ref="module_category_nn_fund_management"/>
+            <field name="privilege_id" ref="privilege_nn_fund_management"/>
             <field name="implied_ids" eval="[(4, ref('group_fund_user'))]"/>
         </record>
 
-        <!-- MD Approver Group -->
         <record id="group_md_approver" model="res.groups">
             <field name="name">MD Approver</field>
-            <field name="category_id" ref="module_category_nn_fund_management"/>
+            <field name="privilege_id" ref="privilege_nn_fund_management"/>
             <field name="implied_ids" eval="[(4, ref('group_gm_approver'))]"/>
         </record>
 
-        <!-- Fund Administrator: full config/admin rights, NOT an implied approver -->
         <record id="group_fund_admin" model="res.groups">
             <field name="name">Fund Administrator</field>
-            <field name="category_id" ref="module_category_nn_fund_management"/>
+            <field name="privilege_id" ref="privilege_nn_fund_management"/>
             <field name="implied_ids" eval="[(4, ref('group_finance_user'))]"/>
         </record>
     </data>

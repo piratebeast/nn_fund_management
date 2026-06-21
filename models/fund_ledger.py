@@ -6,9 +6,9 @@ expense head, along with the entry type, amount, and source document metadata.
 from odoo import models, fields
 
 class FundLedger(models.Model):
-    _name = 'fund.Ledger'
+    _name = 'nn.fund.ledger'
     _description = 'Fund Management Ledger'
-    _orders = 'id desc'  # Default sorting by most recent entries
+    _order = 'id desc'  # Default sorting by most recent entries
 
     fund_account_id = fields.Many2one('nn.fund.account', string="Fund Account", ondelete='restrict')
     project_id = fields.Many2one('project.project', string="Project", ondelete='restrict')

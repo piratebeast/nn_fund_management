@@ -5,3 +5,4 @@ access_expense_head_admin,nn.expense.head,model_nn_expense_head,group_fund_admin
 access_fund_transaction_admin,nn.fund.account.transaction,model_nn_fund_account_transaction,group_fund_admin,1,1,1,1
 access_approval_history_admin,nn.approval.history,model_nn_approval_history,group_fund_admin,1,1,1,1
 access_approval_wizard_admin,nn.approval.decision.wizard,model_nn_approval_decision_wizard,group_fund_admin,1,1,1,1
+access_fund_allocation_admin,nn.fund.allocation,model_nn_fund_allocation,group_fund_admin,1,1,1,1

@@ -48,7 +48,7 @@ class ApprovalMixin(models.AbstractModel):
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
         ('cancelled', 'Cancelled')
-    ], string="Status", default='draft', tracking=True, readonly=True)
+    ], string="Status", default='draft', readonly=True) # tracking=True is removed for testing 
 
     requested_by = fields.Many2one('res.users', string="Requested By", default=lambda self: self.env.user, readonly=True)
     request_date = fields.Date(string="Request Date", default=fields.Date.context_today, readonly=True)

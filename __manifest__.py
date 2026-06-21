@@ -5,12 +5,14 @@
     'summary': 'Manage incoming funds, allocations, requisitions, and transfers cleanly.',
     'author': 'Your Name',
     'company': 'NN Services & Engineering Ltd.',
-    'depends': ['base', 'project'],  # Reusing native Odoo projects as planned
+    'depends': ['base', 'project', 'mail'],
     'data': [
         'security/security_groups.xml',
-        'security/ir.model.access.csv',
+        #'security/ir.model.access.csv',
+        'data/nn_fund_sequence.xml',
         'views/approval_decision_wizard_view.xml',
         'views/fund_account_views.xml',
+        'views/fund_allocation_views.xml',
         'views/menus.xml',
     ],
     'installable': True,

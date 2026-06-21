@@ -9,6 +9,8 @@
     'data': [
         'security/security_groups.xml',
         'security/ir.model.access.csv',
+        'views/approval_decision_wizard_view.xml',
+        'views/fund_account_views.xml',
         'views/menus.xml',
     ],
     'installable': True,

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_nn_fund_requisition_form" model="ir.ui.view">
+        <field name="name">nn.fund.requisition.form</field>
+        <field name="model">nn.fund.requisition</field>
+        <field name="arch" type="xml">
+            <form string="Fund Requisition Request">
+                <header>
+                    <button name="action_submit" string="Submit Requisition" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    
+                    <button name="%(nn_fund_management.action_nn_approval_decision_wizard)d" string="GM Approve" type="action" class="oe_highlight" context="{'default_action_type': 'gm_approve', 'default_res_model': 'nn.fund.requisition', 'default_res_id': id}" groups="nn_fund_management.group_gm_approver" invisible="state != 'gm_approval'"/>
+                    <button name="%(nn_fund_management.action_nn_approval_decision_wizard)d" string="MD Approve" type="action" class="oe_highlight" context="{'default_action_type': 'md_approve', 'default_res_model': 'nn.fund.requisition', 'default_res_id': id}" groups="nn_fund_management.group_md_approver" invisible="state != 'md_approval'"/>
+                    
+                    <button name="%(nn_fund_management.action_nn_approval_decision_wizard)d" string="Reject" type="action" class="btn-danger" context="{'default_action_type': 'reject', 'default_res_model': 'nn.fund.requisition', 'default_res_id': id}" groups="nn_fund_management.group_gm_approver,nn_fund_management.group_md_approver" invisible="state not in ['gm_approval', 'md_approval']"/>
+                    <button name="%(nn_fund_management.action_nn_approval_decision_wizard)d" string="Cancel Requisition" type="action" class="btn-secondary" context="{'default_action_type': 'cancel', 'default_res_model': 'nn.fund.requisition', 'default_res_id': id}" groups="nn_fund_management.group_fund_admin" invisible="state not in ['approved', 'submitted', 'gm_approval', 'md_approval']"/>
+                    
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,gm_approval,md_approval,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Source Allocations">
+                            <field name="project_id" placeholder="Select project source if applicable" readonly="state != 'draft'"/>
+                            <field name="expense_head_id" placeholder="Select expense head source if applicable" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Financial Matrix">
+                            <field name="requested_amount" readonly="state != 'draft'"/>
+                            <field name="remaining_billable_amount" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Operational Windows">
+                        <field name="purpose" readonly="state != 'draft'"/>
+                        <field name="required_date" readonly="state != 'draft'"/>
+                        <field name="attachment" filename="attachment_filename" readonly="state != 'draft'"/>
+                        <field name="attachment_filename" invisible="1"/>
+                        <field name="requested_by"/>
+                        <field name="request_date"/>
+                    </group>
+                    <notebook>
+                        <page string="Approval Flow Activity Tracking">
+                            <field name="approval_history_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="approver_id"/>
+                                    <field name="approval_level"/>
+                                    <field name="result"/>
+                                    <field name="comment"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_nn_fund_requisition_tree" model="ir.ui.view">
+        <field name="name">nn.fund.requisition.list</field>
+        <field name="model">nn.fund.requisition</field>
+        <field name="arch" type="xml">
+            <list string="Requisition Tracking" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="expense_head_id"/>
+                <field name="requested_amount" sum="Total Requisitions"/>
+                <field name="remaining_billable_amount"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state in ['gm_approval', 'md_approval']" decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_nn_fund_requisition" model="ir.actions.act_window">
+        <field name="name">Requisition Operations</field>
+        <field name="res_model">nn.fund.requisition</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

@@ -8,5 +8,13 @@
             <field name="padding">5</field>
             <field name="company_id" eval="False"/>
         </record>
+
+        <record id="seq_nn_fund_requisition" model="ir.sequence">
+            <field name="name">Fund Requisition Sequence</field>
+            <field name="code">nn.fund.requisition</field>
+            <field name="prefix">REQ-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
     </data>
 </odoo>

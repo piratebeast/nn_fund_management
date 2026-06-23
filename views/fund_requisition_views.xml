@@ -39,6 +39,17 @@
                         <field name="request_date"/>
                     </group>
                     <notebook>
+                        <page string="Vendor Invoice Ledger Tracking">
+                            <field name="bill_ids" readonly="1">
+                                <list>
+                                    <field name="bill_date"/>
+                                    <field name="name"/>
+                                    <field name="supplier_id"/>
+                                    <field name="amount" sum="Total Invoiced"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'posted'" decoration-info="state == 'draft'"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Approval Flow Activity Tracking">
                             <field name="approval_history_ids" readonly="1">
                                 <list>

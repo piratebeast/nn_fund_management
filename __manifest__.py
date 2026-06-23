@@ -14,6 +14,7 @@
         'views/fund_account_views.xml',
         'views/fund_allocation_views.xml',
         'views/fund_requisition_views.xml',
+        'views/fund_bill_views.xml',
         'views/menus.xml',
     ],
     'installable': True,

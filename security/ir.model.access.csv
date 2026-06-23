@@ -7,3 +7,4 @@ access_approval_history_admin,nn.approval.history,model_nn_approval_history,nn_f
 access_approval_wizard_admin,nn.approval.decision.wizard,model_nn_approval_decision_wizard,nn_fund_management.group_fund_admin,1,1,1,1
 access_fund_allocation_admin,nn.fund.allocation,model_nn_fund_allocation,nn_fund_management.group_fund_admin,1,1,1,1
 access_fund_requisition_admin,nn.fund.requisition,model_nn_fund_requisition,nn_fund_management.group_fund_admin,1,1,1,1
+access_fund_bill_admin,nn.fund.bill,model_nn_fund_bill,nn_fund_management.group_fund_admin,1,1,1,1

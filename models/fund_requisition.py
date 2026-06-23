@@ -62,7 +62,7 @@ class FundRequisition(models.Model):
                     f"available allocated balance ({available}) for '{target_name}'."
                 )
 
-            record.env['nn.fund.ledger'].create({
+            record.env['nn.fund.ledger'].sudo().create({
                 'project_id': record.project_id.id or False,
                 'expense_head_id': record.expense_head_id.id or False,
                 'amount': -record.requested_amount,
@@ -81,7 +81,7 @@ class FundRequisition(models.Model):
         self.ensure_one()
         target_name = self.project_id.name if self.project_id else self.expense_head_id.name
 
-        self.env['nn.fund.ledger'].create({
+        self.env['nn.fund.ledger'].sudo().create({
             'project_id': self.project_id.id or False,
             'expense_head_id': self.expense_head_id.id or False,
             'amount': self.requested_amount,
@@ -90,7 +90,7 @@ class FundRequisition(models.Model):
             'res_id': self.id,
             'description': f"Release requisition hold on MD approval. Ref: {self.name}",
         })
-        self.env['nn.fund.ledger'].create({
+        self.env['nn.fund.ledger'].sudo().create({
             'project_id': self.project_id.id or False,
             'expense_head_id': self.expense_head_id.id or False,
             'amount': self.requested_amount,
@@ -120,7 +120,7 @@ class FundRequisition(models.Model):
         ])
         net = sum(line.amount for line in ledger_entries)
         if net:
-            self.env['nn.fund.ledger'].create({
+            self.env['nn.fund.ledger'].sudo().create({
                 'project_id': self.project_id.id or False,
                 'expense_head_id': self.expense_head_id.id or False,
                 'amount': -net,

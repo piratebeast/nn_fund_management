@@ -24,5 +24,13 @@
             <field name="padding">5</field>
             <field name="company_id" eval="False"/>
         </record>
+
+        <record id="seq_nn_fund_transfer" model="ir.sequence">
+            <field name="name">Account Transfer Sequence</field>
+            <field name="code">nn.fund.transfer</field>
+            <field name="prefix">XFR-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
     </data>
 </odoo>

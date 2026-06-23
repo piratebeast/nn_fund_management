@@ -1,5 +1,4 @@
 """Incoming fund transactions that create unassigned ledger entries.
-
 This model stores incoming fund details, validates the amount, and confirms
 transactions by posting them into the central fund ledger.
 """
@@ -43,7 +42,7 @@ class FundAccountTransaction(models.Model):
             raise ValidationError("Only draft transactions can be confirmed.")
 
         # Write directly to the unified ledger system
-        self.env['nn.fund.ledger'].create({
+        self.env['nn.fund.ledger'].sudo().create({
             'fund_account_id': self.fund_account_id.id,
             'amount': self.amount,
             'entry_type': 'unassigned',

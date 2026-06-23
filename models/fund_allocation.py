@@ -1,6 +1,7 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 
+
 class FundAllocation(models.Model):
     _name = 'nn.fund.allocation'
     _inherit = 'nn.approval.mixin', 'mail.thread'
@@ -42,29 +43,37 @@ class FundAllocation(models.Model):
     def action_submit(self):
         self.ensure_one()
         if self.amount > self.fund_account_id.unassigned_balance:
-            raise ValidationError(f"Overdraft Blocked: Requested amount ({self.amount}) exceeds available unassigned pool ({self.fund_account_id.unassigned_balance}).")
+            raise ValidationError(
+                f"Overdraft Blocked: Requested amount ({self.amount}) exceeds available "
+                f"unassigned pool ({self.fund_account_id.unassigned_balance})."
+            )
 
-        self.env['nn.fund.ledger'].create({
+        # .sudo(): regular Fund Users only have create access on nn.fund.allocation,
+        # not on nn.fund.ledger directly (by design). The actual authorization gate
+        # is the balance check above, not the ir.model.access entry on the ledger.
+        self.env['nn.fund.ledger'].sudo().create({
             'fund_account_id': self.fund_account_id.id,
             'amount': -self.amount,
             'entry_type': 'hold_alloc',
             'res_model': self._name,
             'res_id': self.id,
-            'description': f"Pending allocation lock for {self.project_id.name or self.expense_head_id.name}. Ref: {self.name}"
+            'description': f"Pending allocation lock for {self.project_id.name or self.expense_head_id.name}. Ref: {self.name}",
         })
 
         super(FundAllocation, self).action_submit()
 
     def _finalize_ledger_entries(self):
+        """Called by the mixin's action_approve_md once state is set to 'approved'."""
         self.ensure_one()
-        self.env['nn.fund.ledger'].create({
+        self.env['nn.fund.ledger'].sudo().create({
             'fund_account_id': self.fund_account_id.id,
             'amount': self.amount,
             'entry_type': 'hold_alloc',
             'res_model': self._name,
             'res_id': self.id,
+            'description': f"Release allocation hold on MD approval. Ref: {self.name}",
         })
-        self.env['nn.fund.ledger'].create({
+        self.env['nn.fund.ledger'].sudo().create({
             'fund_account_id': self.fund_account_id.id,
             'project_id': self.project_id.id or False,
             'expense_head_id': self.expense_head_id.id or False,
@@ -72,20 +81,38 @@ class FundAllocation(models.Model):
             'entry_type': 'allocated',
             'res_model': self._name,
             'res_id': self.id,
-            'description': f"Finalized funding released to destination account. Ref: {self.name}"
+            'description': f"Finalized funding released to destination account. Ref: {self.name}",
         })
 
     def _reverse_held_ledger_entries(self):
-        self.ensure_one()
-        ledger_entries = self.env['nn.fund.ledger'].search([('res_model', '=', self._name), ('res_id', '=', self.id)])
-        hold_sum = sum(line.amount for line in ledger_entries if line.entry_type == 'hold_alloc')
+        """Called by the mixin's action_reject/action_cancel.
 
-        if hold_sum != 0:
-            self.env['nn.fund.ledger'].create({
+        Which ledger entry_type needs reversing depends on how far the allocation
+        got before being rejected/cancelled:
+          - gm_approval / md_approval (pre-MD-approval): only the hold_alloc hold
+            on the fund account exists. Reverse it.
+          - approved (cancel only — reject can't happen from here): the hold_alloc
+            was already released and converted to 'allocated' by
+            _finalize_ledger_entries, so it's the 'allocated' entry that must be
+            reversed, not hold_alloc.
+        """
+        self.ensure_one()
+        entry_type_to_reverse = 'allocated' if self.state == 'approved' else 'hold_alloc'
+
+        ledger_entries = self.env['nn.fund.ledger'].search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('entry_type', '=', entry_type_to_reverse),
+        ])
+        net = sum(line.amount for line in ledger_entries)
+        if net:
+            self.env['nn.fund.ledger'].sudo().create({
                 'fund_account_id': self.fund_account_id.id,
-                'amount': abs(hold_sum),
-                'entry_type': 'hold_alloc',
+                'project_id': self.project_id.id or False,
+                'expense_head_id': self.expense_head_id.id or False,
+                'amount': -net,
+                'entry_type': entry_type_to_reverse,
                 'res_model': self._name,
                 'res_id': self.id,
-                'description': f"Rollback allocation hold. Request {self.name} was rejected/cancelled."
+                'description': f"Rollback {entry_type_to_reverse}. Request {self.name} was rejected/cancelled.",
             })

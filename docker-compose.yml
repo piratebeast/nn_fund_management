@@ -1,0 +1,32 @@
+version: '3.1'
+
+services:
+  web:
+    image: odoo:19.0  # Odoo 19
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      # Mount the entire custom addons directory so Odoo reads all folders inside it
+      - .:/mnt/extra-addons
+    # Added the addons-path argument so Odoo actually looks at your custom folder
+    command: ["odoo", "--dev=xml,reload", "--addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons"]
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo_db_pass
+
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo_db_pass
+      - POSTGRES_USER=odoo
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+
+volumes:
+  odoo-web-data:
+  odoo-db-data: 

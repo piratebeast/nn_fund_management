@@ -34,7 +34,6 @@ class FundBill(models.Model):
         ondelete='restrict'
     )
 
-    # Cascade core metadata dimensions down automatically from the parent reference
     project_id = fields.Many2one('project.project', string="Project", related="requisition_id.project_id", store=True, readonly=True)
     expense_head_id = fields.Many2one('nn.expense.head', string="Expense Head", related="requisition_id.expense_head_id", store=True, readonly=True)
 
@@ -59,7 +58,6 @@ class FundBill(models.Model):
         concurrently-created drafts can both pass this check against the same
         budget. The real guard against double-spending lives in action_post(),
         which takes a row lock on the requisition before re-checking the amount.
-        Do not rely on this constraint alone for correctness.
         """
         for record in self:
             if record.state == 'draft':
@@ -76,12 +74,12 @@ class FundBill(models.Model):
     def action_post(self):
         """Finalizes bill details and executes ledger asset transitions.
 
-        Double-spend safety: takes a SELECT ... FOR UPDATE lock on the parent
-        requisition row before re-reading remaining_billable_amount. This forces
-        any concurrent action_post() call against the same requisition to block
-        until this transaction commits or rolls back, so the re-read always
-        reflects the true, up-to-date remaining balance rather than a stale value
-        both transactions might otherwise read identically before either writes.
+        Ledger writes use .sudo() because regular Fund Users only have create
+        access on nn.fund.bill, not on nn.fund.ledger directly (by design — we
+        don't want any user able to fabricate arbitrary ledger rows). The actual
+        authorization gate is the state check above and the row lock below, not
+        the ir.model.access entry on nn.fund.ledger; sudo() here only elevates
+        privilege for these specific, narrowly-scoped, code-controlled writes.
         """
         for record in self:
             if record.state != 'draft':
@@ -93,10 +91,6 @@ class FundBill(models.Model):
                 (record.requisition_id.id,)
             )
 
-            # Force a fresh read of the computed field now that we hold the lock.
-            # Any concurrent transaction that already posted a bill against this
-            # requisition has either committed (and we now see its effect) or is
-            # blocked waiting on us (and will see ours once we commit).
             record.requisition_id.invalidate_recordset(['remaining_billable_amount'])
             remaining = record.requisition_id.remaining_billable_amount
 
@@ -108,7 +102,7 @@ class FundBill(models.Model):
 
             # Double-Entry Ledger Movement:
             # 1. Deduct the value from the 'reserved' holding bucket
-            record.env['nn.fund.ledger'].create({
+            record.env['nn.fund.ledger'].sudo().create({
                 'project_id': record.project_id.id or False,
                 'expense_head_id': record.expense_head_id.id or False,
                 'amount': -record.amount,
@@ -119,11 +113,11 @@ class FundBill(models.Model):
             })
 
             # 2. Record the permanent actual cash expense outflow line
-            record.env['nn.fund.ledger'].create({
+            record.env['nn.fund.ledger'].sudo().create({
                 'project_id': record.project_id.id or False,
                 'expense_head_id': record.expense_head_id.id or False,
                 'amount': record.amount,
-                'entry_type': 'actual',
+                'entry_type': 'spent',
                 'res_model': record._name,
                 'res_id': record.id,
                 'description': f"Actual payout execution for Vendor Bill {record.name}",
@@ -134,10 +128,7 @@ class FundBill(models.Model):
     def action_cancel(self):
         """Gracefully re-allocates funds back to the reservation pool upon cancellation.
 
-        Same row-locking pattern as action_post: although cancelling only frees up
-        budget room rather than consuming it, locking keeps the requisition's
-        remaining_billable_amount reads/writes consistent if a post and a cancel
-        on sibling bills happen to race against each other.
+        Same .sudo() reasoning as action_post — see note there.
         """
         for record in self:
             if record.state != 'posted':
@@ -149,7 +140,7 @@ class FundBill(models.Model):
             )
 
             # Perfect mathematical negation of the original post:
-            record.env['nn.fund.ledger'].create({
+            record.env['nn.fund.ledger'].sudo().create({
                 'project_id': record.project_id.id or False,
                 'expense_head_id': record.expense_head_id.id or False,
                 'amount': record.amount,
@@ -158,11 +149,11 @@ class FundBill(models.Model):
                 'res_id': record.id,
                 'description': f"Re-reserve balance from cancelled Bill {record.name}",
             })
-            record.env['nn.fund.ledger'].create({
+            record.env['nn.fund.ledger'].sudo().create({
                 'project_id': record.project_id.id or False,
                 'expense_head_id': record.expense_head_id.id or False,
                 'amount': -record.amount,
-                'entry_type': 'actual',
+                'entry_type': 'spent',
                 'res_model': record._name,
                 'res_id': record.id,
                 'description': f"Reverse actual payout transaction rows for Bill {record.name}",

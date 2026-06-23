@@ -8,6 +8,7 @@
     'depends': ['base', 'project', 'mail'],
     'data': [
         'security/security_groups.xml',
+        'security/ir_rules.xml',
         'security/ir.model.access.csv',
         'data/nn_fund_sequence.xml',
         'views/approval_decision_wizard_view.xml',
@@ -22,3 +23,4 @@
     'application': True,
     'license': 'LGPL-3',
 }
+

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_nn_fund_transfer_form" model="ir.ui.view">
+        <field name="name">nn.fund.transfer.form</field>
+        <field name="model">nn.fund.transfer</field>
+        <field name="arch" type="xml">
+            <form string="Internal Fund Transfer">
+                <header>
+                    <button name="action_submit" string="Submit Transfer" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+
+                    <button name="%(nn_fund_management.action_nn_approval_decision_wizard)d" string="GM Approve" type="action" class="oe_highlight" context="{'default_action_type': 'gm_approve', 'default_res_model': 'nn.fund.transfer', 'default_res_id': id}" groups="nn_fund_management.group_gm_approver" invisible="state != 'gm_approval'"/>
+                    <button name="%(nn_fund_management.action_nn_approval_decision_wizard)d" string="MD Approve" type="action" class="oe_highlight" context="{'default_action_type': 'md_approve', 'default_res_model': 'nn.fund.transfer', 'default_res_id': id}" groups="nn_fund_management.group_md_approver" invisible="state != 'md_approval'"/>
+
+                    <button name="%(nn_fund_management.action_nn_approval_decision_wizard)d" string="Reject" type="action" class="btn-danger" context="{'default_action_type': 'reject', 'default_res_model': 'nn.fund.transfer', 'default_res_id': id}" groups="nn_fund_management.group_gm_approver,nn_fund_management.group_md_approver" invisible="state not in ['gm_approval', 'md_approval']"/>
+                    <button name="%(nn_fund_management.action_nn_approval_decision_wizard)d" string="Cancel Transfer" type="action" class="btn-secondary" context="{'default_action_type': 'cancel', 'default_res_model': 'nn.fund.transfer', 'default_res_id': id}" groups="nn_fund_management.group_fund_admin" invisible="state not in ['approved', 'submitted', 'gm_approval', 'md_approval']"/>
+
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,gm_approval,md_approval,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Source">
+                            <field name="source_type" readonly="state != 'draft'"/>
+                            <field name="source_project_id"
+                                   options="{'no_create': True}"
+                                   invisible="source_type != 'project'"
+                                   required="source_type == 'project'"
+                                   readonly="state != 'draft'"/>
+                            <field name="source_expense_head_id"
+                                   options="{'no_create': True}"
+                                   invisible="source_type != 'expense'"
+                                   required="source_type == 'expense'"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Destination">
+                            <field name="destination_type" readonly="state != 'draft'"/>
+                            <field name="destination_project_id"
+                                   options="{'no_create': True}"
+                                   invisible="destination_type != 'project'"
+                                   required="destination_type == 'project'"
+                                   readonly="state != 'draft'"/>
+                            <field name="destination_expense_head_id"
+                                   options="{'no_create': True}"
+                                   invisible="destination_type != 'expense'"
+                                   required="destination_type == 'expense'"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Financial Details">
+                            <field name="amount" readonly="state != 'draft'"/>
+                            <field name="transfer_date" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Metadata">
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <group string="Reason">
+                        <field name="description" placeholder="Why is this transfer needed?" readonly="state != 'draft'" nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Approval Flow Activity Tracking">
+                            <field name="approval_history_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="approver_id"/>
+                                    <field name="approval_level"/>
+                                    <field name="result"/>
+                                    <field name="comment"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_nn_fund_transfer_tree" model="ir.ui.view">
+        <field name="name">nn.fund.transfer.list</field>
+        <field name="model">nn.fund.transfer</field>
+        <field name="arch" type="xml">
+            <list string="Internal Fund Transfers" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'">
+                <field name="transfer_date"/>
+                <field name="name"/>
+                <field name="source_type"/>
+                <field name="source_project_id"/>
+                <field name="source_expense_head_id"/>
+                <field name="destination_type"/>
+                <field name="destination_project_id"/>
+                <field name="destination_expense_head_id"/>
+                <field name="amount" sum="Total Transferred"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state in ['gm_approval', 'md_approval']" decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_nn_fund_transfer" model="ir.actions.act_window">
+        <field name="name">Internal Transfers</field>
+        <field name="res_model">nn.fund.transfer</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

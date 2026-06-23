@@ -62,6 +62,33 @@ To verify functional behavior across distinct organizational access tiers, estab
 
 **Single Source of Truth Calculations:** To protect data integrity, calculated balances are never updated via direct manual edits. Values are computed in real time by summing double-entry lines in the central ledger history database table.
 
+## SECTION 2: SYSTEM ARCHITECTURE EXPLANATION
+The nn_fund_management architecture follows a strict, domain-driven Sub-Ledger Pattern designed to guarantee mathematical absolute reliability over liquid corporate capital assets.
+
+```mermaid
+graph TD
+    A[Incoming Fund] --> B[Fund Account: Unassigned Balance]
+    B --> C(Allocation Request Submitted)
+    C --> D[Create - Ledger Line: hold_alloc]
+    D --> E(MD Workflow Approved)
+    E --> F[Reverse hold_alloc]
+    F --> G[Write allocated]
+    G --> H[Project Balances <br> Dynamic Summation via Ledger]
+    G --> I[Expense Head Balances <br> Dynamic Summation via Ledger]
+```
+
+#### 1. Unified Sub-Ledger Database Engine (nn.fund.ledger)
+Instead of directly modifying numeric columns on a project or account row (which creates immense risk for race conditions and data mutation drift), this application treats every financial movement as an immutable log event. Balances across Fund Accounts, Projects, and Expense Heads are computed dynamically in real time via filtered aggregates (sum()) of these lines.
+
+#### 2. Concurrency Control & State Protection
+To permanently eliminate double-spending, all critical transitions utilize database level row-locking strategies via Python:
+
+- Before verifying if a project has enough available funds to support a requisition or internal transfer, the system explicitly executes a SELECT ... FOR UPDATE query against the target database IDs.
+- This blocks any parallel background worker process from reading stale balance states, completely shielding the ledger from race conditions during heavy concurrent use.
+
+#### 3. Reusable Workflow Injection (nn.approval.mixin)
+The multi-tier authorization matrix is decoupled into an abstract architectural mixin. Any transactional document (FundAllocation, FundRequisition, FundTransfer) that inherits from this mixin automatically receives complete access-group state tracking, automated GM/MD routing, self-approval blockage, and a read-only audit log visibility tab out-of-the-box.
+
 ### ⚠️ Known Limitations
 **Single Currency Context:** The module computes balances by processing numerical sums of ledger floats without managing real-time multi-currency exchange rate adjustments.
 
